@@ -1,4 +1,11 @@
 #!/bin/bash
+#SBATCH --time=12:00:00
+#SBATCH --nodes=1
+#SBATCH --output=slurm_output/run/slurm-%j.out
+#SBATCH --job-name="project"
+#SBATCH --partition=eng-instruction
+#SBATCH --account=25sp-cs581a-eng
+#SBATCH --mem=64G
 
 for hILS in false true
 do
@@ -25,7 +32,7 @@ do
                     fi
                     echo "Input directory ${input_dir} exists. Proceeding with ${id} ${run_id}."
 
-                    output_dir=data/output/trees/${id}/${run_id}
+                    output_dir=output/trees/${id}/${run_id}
                     mkdir -p $output_dir
 
                     # == True tree ==
