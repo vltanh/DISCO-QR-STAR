@@ -1,0 +1,6 @@
+[submodule "DISCO"]
+	path = DISCO
+	url = git@github.com:JSdoubleL/DISCO
+[submodule "Quintet-Rooting"]
+	path = Quintet-Rooting
+	url = git@github.com:ytabatabaee/Quintet-Rooting
