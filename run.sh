@@ -41,9 +41,7 @@ do
                     do
                         input_tree=${input_dir}/g_${g_type}.trees
 
-                        if [ -f ${input_tree} ]; then
-                            echo "Gene tree ${id} ${run_id} ${g_type} exists."
-                        else
+                        if [ ! -f ${input_tree} ]; then
                             echo "Gene tree does not exist. Skipping ${id} ${run_id} ${g_type}."
                             continue
                         fi
@@ -57,11 +55,36 @@ do
                                 -i ${input_tree} \
                                 -o ${output_dir}/disco_${g_type}g.trees \
                                 -d _ \
-                            1>${output_dir}/disco_${g_type}g.log 2>${output_dir}/disco_${g_type}g.err
+                            1>${output_dir}/disco_${g_type}g.out 2>${output_dir}/disco_${g_type}g.err
 
                             if [ -f ${output_dir}/disco_${g_type}g.trees ]; then
                                 touch ${output_dir}/disco_${g_type}g_done
                             fi
+                        fi
+
+                        if [ ! -f ${output_dir}/disco_${g_type}g.trees ]; then
+                            echo "DISCO tree does not exist. Skipping ${id} ${run_id} ${g_type}."
+                            continue
+                        fi
+                        
+                        if [ -f ${output_dir}/astriddisco_${g_type}g_s_done ]; then
+                            echo "ASTRID already done"
+                        else
+                            echo "Running ASTRID on gene trees"
+
+                            ./ASTRID/bazel-bin/src/ASTRID \
+                                -i ${output_dir}/disco_${g_type}g.trees \
+                                -o ${output_dir}/astriddisco_${g_type}g_s.tree \
+                            1>${output_dir}/astriddisco_${g_type}g_s.out 2>${output_dir}/astriddisco_${g_type}g_s.err
+
+                            if [ -f ${output_dir}/astriddisco_${g_type}g_s.tree ]; then
+                                touch ${output_dir}/astriddisco_${g_type}g_s_done
+                            fi
+                        fi
+
+                        if [ ! -f ${output_dir}/astriddisco_${g_type}g_s.tree ]; then
+                            echo "ASTRID tree does not exist. Skipping ${id} ${run_id} ${g_type}."
+                            continue
                         fi
 
                         if [ -f ${output_dir}/disco_qr_le_${g_type}g_s_done ]; then
@@ -70,12 +93,12 @@ do
                             echo "Running QR on gene trees"
 
                             python Quintet-Rooting/quintet_rooting.py \
-                                -t ${input_dir}/s_tree.trees  \
+                                -t ${output_dir}/astriddisco_${g_type}g_s.tree  \
                                 -g ${output_dir}/disco_${g_type}g.trees \
                                 -o ${output_dir}/disco_qr_le_${g_type}g_s.tree \
                                 -sm LE \
                                 -rs 0 \
-                            1>${output_dir}/disco_qr_le_${g_type}g_s.log 2>${output_dir}/disco_qr_le_${g_type}g_s.err
+                            1>${output_dir}/disco_qr_le_${g_type}g_s.out 2>${output_dir}/disco_qr_le_${g_type}g_s.err
 
                             if [ -f ${output_dir}/disco_qr_le_${g_type}g_s.tree ]; then
                                 touch ${output_dir}/disco_qr_le_${g_type}g_s_done
@@ -97,13 +120,13 @@ do
                             echo "Running QR-STAR on gene trees"
 
                             python Quintet-Rooting/quintet_rooting.py \
-                                -t ${input_dir}/s_tree.trees  \
+                                -t ${output_dir}/astriddisco_${g_type}g_s.tree  \
                                 -g ${output_dir}/disco_${g_type}g.trees \
                                 -o ${output_dir}/disco_qrstar_le_${g_type}g_s.tree \
                                 -sm LE \
                                 -c STAR \
                                 -rs 0 \
-                            1>${output_dir}/disco_qrstar_le_${g_type}g_s.log 2>${output_dir}/disco_qrstar_le_${g_type}g_s.err
+                            1>${output_dir}/disco_qrstar_le_${g_type}g_s.out 2>${output_dir}/disco_qrstar_le_${g_type}g_s.err
 
                             if [ -f ${output_dir}/disco_qrstar_le_${g_type}g_s.tree ]; then
                                 touch ${output_dir}/disco_qrstar_le_${g_type}g_s_done

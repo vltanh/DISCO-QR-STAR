@@ -4,3 +4,6 @@
 [submodule "Quintet-Rooting"]
 	path = Quintet-Rooting
 	url = git@github.com:ytabatabaee/Quintet-Rooting
+[submodule "ASTRID"]
+	path = ASTRID
+	url = git@github.com:pranjalv123/ASTRID
