@@ -18,8 +18,6 @@ do
                 for run_id in {01..10}
                 do
                     echo "=========================="
-                    echo "Running id ${run_id}"
-
                     id=${num_species}_gdl_${dup_rate}_${loss_rate_indicator}
                     if [ $hILS == "true" ]; then
                         id=${id}_hILS
@@ -35,129 +33,164 @@ do
                     output_dir=output/trees/${id}/${run_id}
                     mkdir -p $output_dir
 
-                    # == True tree ==
-
                     for g_type in true 50 100 500
                     do
-                        input_tree=${input_dir}/g_${g_type}.trees
+                        input_tree_raw=${input_dir}/g_${g_type}.trees
 
-                        if [ ! -f ${input_tree} ]; then
+                        if [ ! -f ${input_tree_raw} ]; then
                             echo "Gene tree does not exist. Skipping ${id} ${run_id} ${g_type}."
                             continue
                         fi
 
-                        if [ -f ${output_dir}/disco_${g_type}g_done ]; then
-                            echo "DISCO already done"
-                        else
-                            echo "Running DISCO on gene trees"
+                        for n_genes in 50 100 500 1000
+                        do
+                            input_tree=${output_dir}/${g_type}g/${n_genes}/g_multi.trees
 
-                            python DISCO/disco.py \
-                                -i ${input_tree} \
-                                -o ${output_dir}/disco_${g_type}g.trees \
-                                -d _ \
-                            1>${output_dir}/disco_${g_type}g.out 2>${output_dir}/disco_${g_type}g.err
-
-                            if [ -f ${output_dir}/disco_${g_type}g.trees ]; then
-                                touch ${output_dir}/disco_${g_type}g_done
-                            fi
-                        fi
-
-                        if [ ! -f ${output_dir}/disco_${g_type}g.trees ]; then
-                            echo "DISCO tree does not exist. Skipping ${id} ${run_id} ${g_type}."
-                            continue
-                        fi
-                        
-                        if [ -f ${output_dir}/astriddisco_${g_type}g_s_done ]; then
-                            echo "ASTRID already done"
-                        else
-                            echo "Running ASTRID on gene trees"
-
-                            ./ASTRID/bazel-bin/src/ASTRID \
-                                -i ${output_dir}/disco_${g_type}g.trees \
-                                -o ${output_dir}/astriddisco_${g_type}g_s.tree \
-                            1>${output_dir}/astriddisco_${g_type}g_s.out 2>${output_dir}/astriddisco_${g_type}g_s.err
-
-                            if [ -f ${output_dir}/astriddisco_${g_type}g_s.tree ]; then
-                                touch ${output_dir}/astriddisco_${g_type}g_s_done
-                            fi
-                        fi
-
-                        if [ ! -f ${output_dir}/astriddisco_${g_type}g_s.tree ]; then
-                            echo "ASTRID tree does not exist. Skipping ${id} ${run_id} ${g_type}."
-                            continue
-                        fi
-
-                        if [ -f ${output_dir}/disco_qr_le_${g_type}g_s_done ]; then
-                            echo "QR already done"
-                        else
-                            echo "Running QR on gene trees"
-
-                            python Quintet-Rooting/quintet_rooting.py \
-                                -t ${output_dir}/astriddisco_${g_type}g_s.tree  \
-                                -g ${output_dir}/disco_${g_type}g.trees \
-                                -o ${output_dir}/disco_qr_le_${g_type}g_s.tree \
-                                -sm LE \
-                                -rs 0 \
-                            1>${output_dir}/disco_qr_le_${g_type}g_s.out 2>${output_dir}/disco_qr_le_${g_type}g_s.err
-
-                            if [ -f ${output_dir}/disco_qr_le_${g_type}g_s.tree ]; then
-                                touch ${output_dir}/disco_qr_le_${g_type}g_s_done
-                            fi
-                        fi
-
-                        if [ -f ${output_dir}/disco_qr_le_${g_type}g_s.tree ]; then
-                            echo "Computing nCD on DISCO+QR tree"
-
-                            python ncd.py \
-                                -t1 ${input_dir}/s_tree.trees \
-                                -t2 ${output_dir}/disco_qr_le_${g_type}g_s.tree \
-                            >${output_dir}/disco_qr_le_${g_type}g_ncd.score
-                        fi
-
-                        if [ -f ${output_dir}/disco_qrstar_le_${g_type}g_s_done ]; then
-                            echo "QR-STAR already done"
-                        else
-                            echo "Running QR-STAR on gene trees"
-
-                            python Quintet-Rooting/quintet_rooting.py \
-                                -t ${output_dir}/astriddisco_${g_type}g_s.tree  \
-                                -g ${output_dir}/disco_${g_type}g.trees \
-                                -o ${output_dir}/disco_qrstar_le_${g_type}g_s.tree \
-                                -sm LE \
-                                -c STAR \
-                                -rs 0 \
-                            1>${output_dir}/disco_qrstar_le_${g_type}g_s.out 2>${output_dir}/disco_qrstar_le_${g_type}g_s.err
-
-                            if [ -f ${output_dir}/disco_qrstar_le_${g_type}g_s.tree ]; then
-                                touch ${output_dir}/disco_qrstar_le_${g_type}g_s_done
-                            fi
-                        fi
-
-                        if [ -f ${output_dir}/disco_qrstar_le_${g_type}g_s.tree ]; then
-                            echo "Computing nCD on DISCO+QR-STAR tree"
-
-                            python ncd.py \
-                                -t1 ${input_dir}/s_tree.trees \
-                                -t2 ${output_dir}/disco_qrstar_le_${g_type}g_s.tree \
-                            >${output_dir}/disco_qrstar_le_${g_type}g_ncd.score
-                        fi
-
-                        if [ -f ${output_dir}/disco_qr_le_${g_type}g_ncd.score ] && [ -f ${output_dir}/disco_qrstar_le_${g_type}g_ncd.score ]; then
-                            echo "nCD scores computed"
-                            score_qr=$(cat ${output_dir}/disco_qr_le_${g_type}g_ncd.score)
-                            score_qrstar=$(cat ${output_dir}/disco_qrstar_le_${g_type}g_ncd.score)
-                            echo "nCD(QR): ${score_qr}"
-                            echo "nCD(QR-STAR): ${score_qrstar}"
-                            if [ $(echo "$score_qr < $score_qrstar" | bc) -eq 1 ]; then
-                                echo "QR is better than QR-STAR"
-                                # read -p "Press enter to continue"
-                            elif [ $(echo "$score_qr > $score_qrstar" | bc) -eq 1 ]; then
-                                echo "QR-STAR is better than QR"
-                                # read -p "Press enter to continue"
+                            if [ ! -f ${input_tree} ]; then
+                                mkdir -p ${output_dir}/${g_type}g/${n_genes}/
+                                head -n ${n_genes} ${input_tree_raw} > ${input_tree}
                             else
-                                echo "QR and QR-STAR are equal"
+                                echo "Gene tree file with ${n_genes} genes already exists."
                             fi
-                        fi
+
+                            if [ ! -f ${input_tree} ]; then
+                                echo "Gene tree does not exist. Skipping ${id} ${run_id} ${g_type} ${n_genes}."
+                                continue
+                            fi
+
+                            echo "Running on ${id} ${run_id} ${g_type} ${n_genes}"
+
+                            if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/done ]; then
+                                echo "DISCO already done"
+                            else
+                                echo "Running DISCO on gene trees"
+
+                                mkdir -p ${output_dir}/${g_type}g/${n_genes}/disco/
+
+                                /usr/bin/time -v python DISCO/disco.py \
+                                    -i ${input_tree} \
+                                    -o ${output_dir}/${g_type}g/${n_genes}/disco/g_single.trees \
+                                    -d _ \
+                                1>${output_dir}/${g_type}g/${n_genes}/disco/run.out 2>${output_dir}/${g_type}g/${n_genes}/disco/run.err
+
+                                if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/g_single.trees ]; then
+                                    touch ${output_dir}/${g_type}g/${n_genes}/disco/done
+                                fi
+                            fi
+
+                            if [ ! -f ${output_dir}/${g_type}g/${n_genes}/disco/g_single.trees ]; then
+                                echo "DISCO tree does not exist. Skipping ${id} ${run_id} ${g_type} ${n_genes}."
+                                continue
+                            fi
+
+                            for s_est_method in trues astrid
+                            do
+                                if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/done ]; then
+                                    echo "${s_est_method} already done"
+                                else
+                                    mkdir -p ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/
+
+                                    if [ $s_est_method == "astrid" ]; then
+                                        /usr/bin/time -v ./ASTRID/bazel-bin/src/ASTRID \
+                                            -i ${output_dir}/${g_type}g/${n_genes}/disco/g_single.trees \
+                                            -o ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/s_unrooted_est.tree \
+                                        1>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/run.out 2>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/run.err
+                                    elif [ $s_est_method == "trues" ]; then
+                                        cp ${input_dir}/s_tree.trees ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/s_unrooted_est.tree
+                                    fi
+
+                                    if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/s_unrooted_est.tree ]; then
+                                        touch ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/done
+                                    fi
+                                fi
+
+                                if [ ! -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/s_unrooted_est.tree ]; then
+                                    echo "${s_est_method} tree does not exist. Skipping ${id} ${run_id} ${g_type} ${n_genes}."
+                                    continue
+                                fi
+
+                                for mult in 1 5 10 50
+                                do
+                                    if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/done ]; then
+                                        echo "QR already done"
+                                    else
+                                        echo "Running QR on gene trees"
+
+                                        mkdir -p ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}
+
+                                        /usr/bin/time -v python Quintet-Rooting/quintet_rooting.py \
+                                            -t ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/s_unrooted_est.tree  \
+                                            -g ${output_dir}/${g_type}g/${n_genes}/disco/g_single.trees \
+                                            -o ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/s_rooted_est.tree \
+                                            -sm LE \
+                                            -rs 0 \
+                                            -mult ${mult} \
+                                        1>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/run.out 2>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/run.err
+
+                                        if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/s_rooted_est.tree ]; then
+                                            touch ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/done
+                                        fi
+                                    fi
+
+                                    if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/done ]; then
+                                        echo "Computing nCD on DISCO+QR tree"
+
+                                        python ncd.py \
+                                            -t1 ${input_dir}/s_tree.trees \
+                                            -t2 ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/s_rooted_est.tree \
+                                        >${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/s_rooted_est.score
+                                    fi
+
+                                    if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/done ]; then
+                                        echo "QR-STAR already done"
+                                    else
+                                        echo "Running QR-STAR on gene trees"
+
+                                        mkdir -p ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}
+
+                                        /usr/bin/time -v python Quintet-Rooting/quintet_rooting.py \
+                                            -t ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/s_unrooted_est.tree  \
+                                            -g ${output_dir}/${g_type}g/${n_genes}/disco/g_single.trees \
+                                            -o ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/s_rooted_est.tree \
+                                            -sm LE \
+                                            -c STAR \
+                                            -rs 0 \
+                                            -mult ${mult} \
+                                        1>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/run.out 2>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/run.err
+
+                                        if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/s_rooted_est.tree ]; then
+                                            touch ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/done
+                                        fi
+                                    fi
+
+                                    if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/done ]; then
+                                        echo "Computing nCD on DISCO+QR-STAR tree"
+
+                                        python ncd.py \
+                                            -t1 ${input_dir}/s_tree.trees \
+                                            -t2 ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/s_rooted_est.tree \
+                                        >${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/s_rooted_est.score
+                                    fi
+
+                                    if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/s_rooted_est.score ] && [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/s_rooted_est.score ]; then
+                                        echo "nCD scores computed"
+                                        score_qr=$(cat ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/s_rooted_est.score)
+                                        score_qrstar=$(cat ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qrstar/le/${mult}/s_rooted_est.score)
+                                        echo "nCD(QR): ${score_qr}"
+                                        echo "nCD(QR-STAR): ${score_qrstar}"
+                                        if [ $(echo "$score_qr < $score_qrstar" | bc) -eq 1 ]; then
+                                            echo "QR is better than QR-STAR"
+                                            # read -p "Press enter to continue"
+                                        elif [ $(echo "$score_qr > $score_qrstar" | bc) -eq 1 ]; then
+                                            echo "QR-STAR is better than QR"
+                                            # read -p "Press enter to continue"
+                                        else
+                                            echo "QR and QR-STAR are equal"
+                                        fi
+                                    fi
+                                done
+                            done
+                        done
                     done
                 done
             done
