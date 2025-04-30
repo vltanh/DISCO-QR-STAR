@@ -7,3 +7,6 @@
 [submodule "ASTRID"]
 	path = ASTRID
 	url = git@github.com:pranjalv123/ASTRID
+[submodule "ASTER"]
+	path = ASTER
+	url = git@github.com:chaoszhang/ASTER
