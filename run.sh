@@ -5,17 +5,17 @@
 #SBATCH --job-name="project"
 #SBATCH --partition=eng-instruction
 #SBATCH --account=25sp-cs581a-eng
-#SBATCH --mem=64G
+#SBATCH --mem=8G
 
-for hILS in false true
+for loss_rate_indicator in 1 0 # 0 1
 do
-    for loss_rate_indicator in 0 1
+    for hILS in false # true false
     do
-        for dup_rate in 1e-9 1e-10 5e-10 1e-11 1e-12 1e-13
+        for dup_rate in 1e-9 1e-10 5e-10 1e-11 1e-12 1e-13 # 1e-9 1e-10 5e-10 1e-11 1e-12 1e-13
         do
-            for num_species in 20 50 100
+            for num_species in 20 50 100 # 20 50 100
             do
-                for run_id in {01..10}
+                for run_id in {01..01}
                 do
                     echo "=========================="
                     id=${num_species}_gdl_${dup_rate}_${loss_rate_indicator}
@@ -33,7 +33,7 @@ do
                     output_dir=output/trees/${id}/${run_id}
                     mkdir -p $output_dir
 
-                    for g_type in true 50 100 500
+                    for g_type in true 50 100 500 # true 50 100 500
                     do
                         input_tree_raw=${input_dir}/g_${g_type}.trees
 
@@ -42,7 +42,7 @@ do
                             continue
                         fi
 
-                        for n_genes in 50 100 500 1000
+                        for n_genes in 50 100 500 1000 # 50 100 500 1000
                         do
                             input_tree=${output_dir}/${g_type}g/${n_genes}/g_multi.trees
 
@@ -83,7 +83,7 @@ do
                                 continue
                             fi
 
-                            for s_est_method in trues astrid
+                            for s_est_method in astral # trues astrid
                             do
                                 if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/done ]; then
                                     echo "${s_est_method} already done"
@@ -92,6 +92,11 @@ do
 
                                     if [ $s_est_method == "astrid" ]; then
                                         /usr/bin/time -v ./ASTRID/bazel-bin/src/ASTRID \
+                                            -i ${output_dir}/${g_type}g/${n_genes}/disco/g_single.trees \
+                                            -o ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/s_unrooted_est.tree \
+                                        1>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/run.out 2>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/run.err
+                                    elif [ $s_est_method == "astral" ]; then
+                                        /usr/bin/time -v ./ASTER/bin/astral4 \
                                             -i ${output_dir}/${g_type}g/${n_genes}/disco/g_single.trees \
                                             -o ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/s_unrooted_est.tree \
                                         1>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/run.out 2>${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/run.err
@@ -109,7 +114,7 @@ do
                                     continue
                                 fi
 
-                                for mult in 1 5 10 50
+                                for mult in 50 # 1 5 10 50
                                 do
                                     if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/done ]; then
                                         echo "QR already done"
