@@ -92,7 +92,6 @@ for species_tree in df["unrooted_s_tree"].unique():
     fig.savefig(output_dir / "exp1.pdf", bbox_inches="tight")
 
     # Experiment 2: Varying GTEE
-
     fig = plot_experiment_2x2(
         df[
             (df["num_species"] == 20)
@@ -109,8 +108,6 @@ for species_tree in df["unrooted_s_tree"].unique():
     fig.savefig(output_dir / "exp2.pdf", bbox_inches="tight")
 
     # Experiment 3: Varying the number of gene trees
-
-    # Experiment 3: Varying the number of gene trees
     fig = plot_experiment_2x2(
         df[
             (df["num_species"] == 20)
@@ -125,22 +122,6 @@ for species_tree in df["unrooted_s_tree"].unique():
         x_axis_name="Number of Gene Trees",
     )
     fig.savefig(output_dir / "exp3.pdf", bbox_inches="tight")
-
-    # Experiment 4: Varying the number of species
-    fig = plot_experiment_2x2(
-        df[
-            (df["num_species"].isin([20, 50, 100]))
-            & (df["unrooted_s_tree"] == species_tree)
-            & (df["g_type"].isin(["true"]))
-            & (df["n_genes"] == 100)
-            & (df["dup_rate"] == 1e-12)
-            & (df["loss_rate_indicator"] == 1)
-            & (df["sampling_mult"].isin([1, 5, 10, 50]))
-        ],
-        x_axis="num_species",
-        x_axis_name="Number of Species",
-    )
-    fig.savefig(output_dir / "exp4.pdf", bbox_inches="tight")
 
     # Experiment 4: Varying the number of species
     fig = plot_experiment_2x2(
