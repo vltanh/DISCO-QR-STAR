@@ -10,3 +10,6 @@
 [submodule "ASTER"]
 	path = ASTER
 	url = git@github.com:chaoszhang/ASTER
+[submodule "STRIDE"]
+	path = STRIDE
+	url = git@github.com:JSdoubleL/STRIDE.git
