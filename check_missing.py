@@ -38,7 +38,7 @@ num_species_list = [20, 50, 100]
 run_id_list = range(1, 11)
 n_genes_list = [50, 100, 500, 1000]
 g_type_list = ["true", 50, 100, 500]
-mult_list = [1, 5, 10]  # [1, 5, 10, 50]
+mult_list = [1, 5, 10, 50]  # [1, 5, 10, 50]
 
 for hILS in hILS_list:
     for loss_rate_indicator in loss_rate_indicator_list:
@@ -64,9 +64,22 @@ for hILS in hILS_list:
                             continue
 
                         for n_genes in n_genes_list:
-                            for mult in mult_list:
-                                for us_est_method in ["astral", "astrid", "trues"]:
-                                    for rs_est_method in ["qr", "qrstar"]:
+                            for us_est_method in ["astral", "astrid", "trues"]:
+                                stride_ncd_fp = (
+                                    subinp_dir
+                                    / f"{g_type}g"
+                                    / f"{n_genes}"
+                                    / "stride"
+                                    / us_est_method
+                                    / f"s_rooted_est.score"
+                                )
+
+                                if not stride_ncd_fp.is_file():
+                                    print(f"Missing file: {stride_ncd_fp}")
+                                    continue
+
+                                for rs_est_method in ["qr", "qrstar"]:
+                                    for mult in mult_list:
                                         ncd_fp = (
                                             subinp_dir
                                             / f"{g_type}g"

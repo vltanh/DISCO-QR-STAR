@@ -107,8 +107,39 @@ for loss_rate_indicator in loss_rate_indicator_list:
                                 continue
 
                         for n_genes in n_genes_list:
-                            for mult in mult_list:
-                                for unrooted_s_tree in ["trues", "astrid", "astral"]:
+                            for unrooted_s_tree in ["trues", "astrid", "astral"]:
+                                ncd_stride_fp = (
+                                    subroot_dir
+                                    / f"{g_type}g"
+                                    / f"{n_genes}"
+                                    / "stride"
+                                    / f"{unrooted_s_tree}"
+                                    / "s_rooted_est.score"
+                                )
+
+                                if ncd_stride_fp.is_file():
+                                    ncd_stride = float(
+                                        ncd_stride_fp.read_text().strip()
+                                    )
+
+                                    results.append(
+                                        {
+                                            "num_species": num_species,
+                                            "unrooted_s_tree": unrooted_s_tree,
+                                            "n_genes": n_genes,
+                                            "dup_rate": dup_rate,
+                                            "loss_rate_indicator": loss_rate_indicator,
+                                            "hILS": hILS,
+                                            "g_type": g_type,
+                                            "run_id": run_id,
+                                            "method": "STRIDE",
+                                            "sampling_method": None,
+                                            "sampling_mult": None,
+                                            "ncd": ncd_stride,
+                                        }
+                                    )
+
+                                for mult in mult_list:
                                     ncd_qr_fp = (
                                         subroot_dir
                                         / f"{g_type}g"
@@ -121,10 +152,7 @@ for loss_rate_indicator in loss_rate_indicator_list:
                                         / f"s_rooted_est.score"
                                     )
 
-                                    if not ncd_qr_fp.is_file():
-                                        # print(f"File {ncd_qr_fp} does not exist.")
-                                        continue
-                                    else:
+                                    if ncd_qr_fp.is_file():
                                         ncd_qr = float(ncd_qr_fp.read_text().strip())
 
                                         results.append(
@@ -156,10 +184,7 @@ for loss_rate_indicator in loss_rate_indicator_list:
                                         / f"s_rooted_est.score"
                                     )
 
-                                    if not ncd_qrstar_fp.is_file():
-                                        # print(f"File {ncd_qrstar_fp} does not exist.")
-                                        continue
-                                    else:
+                                    if ncd_qrstar_fp.is_file():
                                         ncd_qrstar = float(
                                             ncd_qrstar_fp.read_text().strip()
                                         )
