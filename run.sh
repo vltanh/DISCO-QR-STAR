@@ -1,21 +1,20 @@
 #!/bin/bash
-#SBATCH --time=12:00:00
+#SBATCH --time=5-00:00:00
 #SBATCH --nodes=1
-#SBATCH --output=slurm_output/run/slurm-%j.out
-#SBATCH --job-name="project"
-#SBATCH --partition=eng-instruction
-#SBATCH --account=25sp-cs581a-eng
-#SBATCH --mem=8G
+#SBATCH --output=slurm_output/disco+qrstar/slurm-%j.out
+#SBATCH --job-name="disco+qr/qrstar"
+#SBATCH --partition=tallis
+#SBATCH --mem=16G
 
-for loss_rate_indicator in 1 0 # 0 1
+for loss_rate_indicator in 1 # 0 1
 do
     for hILS in false # true false
     do
-        for dup_rate in 1e-9 1e-10 5e-10 1e-11 1e-12 1e-13 # 1e-9 1e-10 5e-10 1e-11 1e-12 1e-13
+        for dup_rate in 5e-10 # 1e-9 1e-10 5e-10 1e-11 1e-12 1e-13
         do
-            for num_species in 20 50 100 # 20 50 100
+            for num_species in 1000 # 20 50 100 1000
             do
-                for run_id in {01..01}
+                for run_id in $1
                 do
                     echo "=========================="
                     id=${num_species}_gdl_${dup_rate}_${loss_rate_indicator}
@@ -33,7 +32,7 @@ do
                     output_dir=output/trees/${id}/${run_id}
                     mkdir -p $output_dir
 
-                    for g_type in true 50 100 500 # true 50 100 500
+                    for g_type in true 100 # true 50 100 500
                     do
                         input_tree_raw=${input_dir}/g_${g_type}.trees
 
@@ -83,7 +82,7 @@ do
                                 continue
                             fi
 
-                            for s_est_method in astral # trues astrid
+                            for s_est_method in trues astrid astral # trues astrid astral
                             do
                                 if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/done ]; then
                                     echo "${s_est_method} already done"
@@ -114,7 +113,7 @@ do
                                     continue
                                 fi
 
-                                for mult in 50 # 1 5 10 50
+                                for mult in 1 5 10 50 # 1 5 10 50
                                 do
                                     if [ -f ${output_dir}/${g_type}g/${n_genes}/disco/${s_est_method}/qr/le/${mult}/done ]; then
                                         echo "QR already done"
